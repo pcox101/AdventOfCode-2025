@@ -1,21 +1,52 @@
 import * as fs from 'fs';
-let lines = fs.readFileSync("Day01.txt","utf-8").split('\r\n')
+let lines = fs.readFileSync("day01.txt", "utf-8").split('\r\n')
 
-let l1:number[] = [], l2:number [] = [];
+let position = 50;
+
+let part1 = 0;
+let part2 = 0;
+let wasZero = false;
+let wrappedInFromRight = false;
 
 for (let line in lines) {
-   let l = lines[line].split('   ');
-   l1.push(parseInt(l[0]));
-   l2.push(parseInt(l[1]));
+    let lOrR = lines[line][0];
+    let rots = parseInt(lines[line].slice(1));
+
+    if (lOrR == 'R') {
+        position = position + rots;
+    }
+    else {
+        position = position - rots;
+    }
+
+    while (position < 0) {
+        position = position + 100;
+        if (!wasZero) {
+            part2 = part2 + 1;
+        }
+        wasZero = false;
+    }
+    while (position > 99) {
+        position = position - 100;
+        part2 = part2 + 1;
+        wrappedInFromRight = true;
+    }
+
+    if (position == 0) {
+        part1 = part1 + 1
+        if (!wrappedInFromRight) {
+            part2 = part2 + 1
+        }
+        wasZero = true;
+    }
+    else
+    {
+        wasZero = false;
+    }
+    wrappedInFromRight = false;
+    //console.log(rots + ":" + position);
+    //console.log(part2);
 }
 
-l1.sort();
-l2.sort();
-
-let total = 0;
-
-for (let n in l1) {
-    total = total + (Math.abs(l1[n] - l2[n]));
-}
-
-console.log(total);
+console.log("Part 1: " + part1);
+console.log("Part 2: " + part2);
