@@ -1,65 +1,35 @@
 import * as fs from 'fs';
 let lines = fs.readFileSync("day02.txt", "utf-8").split('\r\n')
 
-let part1 = new Set<number>();
-let part2 = new Set<number>();
+let part1 = 0;
+let part2 = 0;
 
-let allRanges: [number, number][] = [];
+let allRanges: string[] = [];
 
 // one line
 let ranges = lines[0].split(',')
 
-let topTopRange = 0
-
 for (let range in ranges) {
     let split = ranges[range].split('-');
-    let thisRange: [number, number] = [parseInt(split[0]), parseInt(split[1])];
-    allRanges.push(thisRange);
-    topTopRange = Math.max(thisRange[1], topTopRange);
+
+    for (let i = parseInt(split[0]); i <= parseInt(split[1]); i++) {
+        allRanges.push(i.toString());
+    }
 }
 
-// Loop through all the possible keys checking against each range
-let counter = 1;
-while (true) {
-    
-    let p1key = parseInt("" + counter + counter);
-    if (p1key > topTopRange) {
-        break;
+// Loop through all the possible keys seeing which pattern it matches
+let p1 = /^([(\d)]+)\1$/
+let p2 = /^([(\d)]+)\1+$/
+
+for (let k in allRanges) {
+    let key = allRanges[k];
+    if (p1.test(key)) {
+        part1 += parseInt(key);
     }
-    
-    let i = 2
-    while (i < 100)
-    {
-        let keyString = "";
-        for (let j = 0; j < i; j++) {
-            keyString = keyString + counter;
-        }
-
-        let key = parseInt(keyString);
-        if (key > topTopRange) {
-            break;
-        }
-
-        for (let r in allRanges) {
-            let tr = allRanges[r];
-            if (key >= (tr[0]) && key <= (tr[1])) {
-                part2.add(key);
-                if (i == 2)
-                {
-                    part1.add(key);
-                }
-            }
-        };
-        i++;
+    if (p2.test(key)) {
+        part2 += parseInt(key);
     }
-
-    counter++;
 }
 
-let part1Total = 0;
-part1.forEach((p) => part1Total = part1Total + p);
-console.log("Part 1: " + part1Total);
-
-let part2Total = 0;
-part2.forEach((p) => part2Total = part2Total + p);
-console.log("Part 2: " + part2Total);
+console.log("Part 1: " + part1);
+console.log("Part 2: " + part2);
