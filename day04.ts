@@ -1,0 +1,14 @@
+import * as fs from 'fs';
+let lines = fs.readFileSync("day03.txt", "utf-8").split('\r\n')
+
+let part1 = 0;
+let part2 = 0;
+
+for (let x in lines) {
+    let line = lines[x];
+
+    
+}
+
+console.log("Part 1: " + part1);
+console.log("Part 2: " + part2);
