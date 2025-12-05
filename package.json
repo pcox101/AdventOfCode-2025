@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "node-interval-tree": "^2.1.2",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
