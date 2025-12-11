@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { Model, Constraint, Coefficients, solve } from 'yalps';
 
 var lines = fs.readFileSync("day10.txt", "utf-8").split('\r\n')
 
@@ -25,10 +26,7 @@ lines.forEach((line) => {
         });
 
         part1 += solvePart1(lightDiagram, buttonPresses);
-        if (lightDiagram == '.##.') {
-            part2 += solvePart2(joltageDiagram, buttonPresses);
-        }
-
+        part2 += solvePart2(joltageDiagram, buttonPresses);
     }
 
 });
@@ -82,8 +80,53 @@ function solvePart1(lightDiagram: string, buttons: number[][]): number {
     return result;
 }
 
-
 function solvePart2(joltageDiagram: string, buttons: number[][]): number {
+    
+    console.log(buttons);
+    let constraints: Map<string, Constraint> = new Map();
+    
+    let joltages = joltageDiagram.split(',');
+    for (let i = 0; i < joltages.length; i++) {
+        let thisJoltage = parseInt(joltages[i]);
+        let constraint: Constraint = {
+            equal: thisJoltage
+        }
+        constraints.set("j"+i.toString(), constraint);
+    }
+
+    let variables: Map<string,Coefficients<string>> = new Map();
+    for (let i = 0; i < buttons.length; i++) {
+        let b = new Map<string, number>();
+        for (let j = 0; j < buttons[i].length; j++)
+        {
+            b.set("j" + buttons[i][j].toString(), 1);
+
+        }
+        variables.set("b"+i.toString(), b);
+    }
+    
+    const model:Model = {
+        direction:"maximize",
+        constraints,
+        variables,
+        integers=true
+    }
+
+    console.log(constraints);
+    console.log(variables);
+
+    let returnValue = solve(model)
+    console.log(returnValue);
+    
+    let part2 = 0;
+    returnValue.variables.forEach((s,n) => {part2 += s[1]});
+
+    console.log(part2);
+    return part2;
+}
+
+
+function solvePart2Gaussian(joltageDiagram: string, buttons: number[][]): number {
 
     // This feels like a series of simultaneous equations
     // In order to get the first joltage correct, there are a series of buttons which increase that joltage, so we have to press one of those buttons that many times
