@@ -89,7 +89,7 @@ function solvePart2(joltageDiagram: string, buttons: number[][]): number {
     for (let i = 0; i < joltages.length; i++) {
         let thisJoltage = parseInt(joltages[i]);
         let constraint: Constraint = {
-            equal: thisJoltage
+            min: thisJoltage
         }
         constraints.set("j"+i.toString(), constraint);
     }
@@ -106,10 +106,10 @@ function solvePart2(joltageDiagram: string, buttons: number[][]): number {
     }
     
     const model:Model = {
-        direction:"maximize",
+        direction:"minimize",
         constraints,
         variables,
-        integers=true
+        integers:true
     }
 
     console.log(constraints);
