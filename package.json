@@ -1,10 +1,12 @@
 {
   "dependencies": {
+    "highs": "^1.8.0",
     "node-interval-tree": "^2.1.2",
-    "typescript": "^5.8.3",
-    "yalps": "^0.6.3"
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@types/node": "^24.0.14"
-  }
+  },
+  "type": "module"
 }

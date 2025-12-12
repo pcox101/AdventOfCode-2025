@@ -1,22 +1,24 @@
 import * as fs from 'fs';
-import { Model, Constraint, Coefficients, solve } from 'yalps';
+import initHighs from 'highs'
 
 var lines = fs.readFileSync("day10.txt", "utf-8").split('\r\n')
+
+const highs = await initHighs();
 
 let part1 = 0;
 let part2 = 0;
 
-let re = /^\[([.#]+)\] ((\([\d,]+\) ?)+){([\d,]+)}/
+const re = /^\[([.#]+)\] ((\([\d,]+\) ?)+){([\d,]+)}/
 
 lines.forEach((line) => {
-    let r = re.exec(line);
+    const r = re.exec(line);
 
     if (r) {
-        let lightDiagram = r[1];
-        let buttons = r[2];
-        let joltageDiagram = r[4];
-        let presses = buttons.split(' ');
-        let buttonPresses: number[][] = [];
+        const lightDiagram = r[1];
+        const buttons = r[2];
+        const joltageDiagram = r[4];
+        const presses = buttons.split(' ');
+        const buttonPresses: number[][] = [];
         presses.forEach((press) => {
             if (press != '') {
                 let lit: number[] = [];
@@ -81,167 +83,69 @@ function solvePart1(lightDiagram: string, buttons: number[][]): number {
 }
 
 function solvePart2(joltageDiagram: string, buttons: number[][]): number {
-    
-    console.log(buttons);
-    let constraints: Map<string, Constraint> = new Map();
-    
-    let joltages = joltageDiagram.split(',');
-    for (let i = 0; i < joltages.length; i++) {
-        let thisJoltage = parseInt(joltages[i]);
-        let constraint: Constraint = {
-            min: thisJoltage
-        }
-        constraints.set("j"+i.toString(), constraint);
-    }
 
-    let variables: Map<string,Coefficients<string>> = new Map();
+    let objective = '';
+    let bounds = '';
+    let integers = '';
+
+    let b = new Map<string, string[]>();
+
     for (let i = 0; i < buttons.length; i++) {
-        let b = new Map<string, number>();
+        objective=objective+'b'+i + '+';
+        bounds = bounds.concat('b'+i + ' >= 0\r\n');
+        integers = integers.concat('b'+i + ' ');
+
         for (let j = 0; j < buttons[i].length; j++)
         {
-            b.set("j" + buttons[i][j].toString(), 1);
-
+            let k = "j" + buttons[i][j].toString();
+            let v = b.get(k);
+            if (!v)
+            {
+                v = new Array<string>('b'+i);
+                b.set(k, v);
+            }
+            else
+            {
+                v.push('b'+i);
+            }
         }
-        variables.set("b"+i.toString(), b);
     }
-    
-    const model:Model = {
-        direction:"minimize",
-        constraints,
-        variables,
-        integers:true
-    }
+    objective = objective.slice(0, objective.length - 1);
+    bounds = bounds.slice(0,bounds.length-2);
+    integers = integers.slice(0, integers.length - 1);
 
-    console.log(constraints);
-    console.log(variables);
-
-    let returnValue = solve(model)
-    console.log(returnValue);
-    
-    let part2 = 0;
-    returnValue.variables.forEach((s,n) => {part2 += s[1]});
-
-    console.log(part2);
-    return part2;
-}
-
-
-function solvePart2Gaussian(joltageDiagram: string, buttons: number[][]): number {
-
-    // This feels like a series of simultaneous equations
-    // In order to get the first joltage correct, there are a series of buttons which increase that joltage, so we have to press one of those buttons that many times
-    // Then to get the second joltage correct, the same applies, there are a series of buttons that we have to press, which may overlap with the first set of buttons
-    // So eventually we'll arrive at:
-    // (b1 + b3 + b4) = j1
-    // (b3 + b4 + b7 + b9) = j2
-    // etc.
-
-    // Which we should be able to solve using a matrix and Gaussian elimination as long as we have enough
-
-    // But we may not have enough answers to remove all the variables
-    // So we need to do some sort of search
-
-    let solvingArray: number[][] = [];
-    let targetJoltage: number[] = [];
-
+    let constraints = '';
     let joltages = joltageDiagram.split(',');
     for (let i = 0; i < joltages.length; i++) {
         let thisJoltage = parseInt(joltages[i]);
-        targetJoltage.push(thisJoltage);
+        
+        constraints += 'j'+i+': ';
 
-        let buttonPresses: number[] = [];
-        // Now see which buttons we need to press that increases this joltage
-        buttons.forEach((button) => {
-            if (button.includes(i)) {
-                buttonPresses.push(1);
-            }
-            else {
-                buttonPresses.push(0);
-            }
-        });
-
-        solvingArray.push(buttonPresses);
-    };
-
-    //console.log(solvingArray);
-    //console.log(targetJoltage);
-
-    // Simplify our array as much as we can
-    let simplifiedArray = simplifyArray(solvingArray, targetJoltage)
-
-    return 0;
-}
-
-function simplifyArray(solvingArray: number[][], targetJoltage: number[]) {
-
-    // Make the array square and then put the target joltage on the right
-    while (solvingArray.length > solvingArray[0].length) {
-        for (let n = 0; n < solvingArray.length; n++) {
-            solvingArray[n].push(0);
+        let v = b.get('j'+i);
+        if (v) {
+            v.forEach((x) => { constraints += x + '+'})
         }
+        constraints = constraints.slice(0,constraints.length-1);
+        constraints += ' = ' + thisJoltage;
+        constraints += '\r\n';
     }
+    constraints = constraints.slice(0,constraints.length-2);
+    
+    const PROBLEM = `Minimize
+obj: ` + objective + `
+Subject To
+` + constraints + `
+Bounds 
+` + bounds + `
+Integer
+` + integers + `
+End`;
 
-    while (solvingArray.length < solvingArray[0].length) {
-        let newRow: number[] = new Array(solvingArray[0].length).fill(0);
-        solvingArray.push(newRow);
-    }
+    const sol = highs.solve(PROBLEM);
+    //console.log(sol);
 
-    for (let n = 0; n < solvingArray.length; n++) {
-        if (n < targetJoltage.length) {
-            solvingArray[n].push(targetJoltage[n]);
-        }
-        else {
-            solvingArray[n].push(0);
-        }
-    }
+    let part2 = sol.ObjectiveValue;
 
-    outputArray(solvingArray);
-
-
-    for (let workingRowColumn = 0; workingRowColumn < solvingArray.length; workingRowColumn++) {
-        // Put a 1 on the "top" row of this column
-        // Find the first non-zero row
-        let newTopRow = -1;
-        for (let row = workingRowColumn; row < solvingArray.length; row++) {
-            if (solvingArray[row][workingRowColumn] != 0) {
-                newTopRow = row;
-                break;
-            }
-        }
-        // Swap these two rows
-        if (newTopRow == -1) {
-            continue;
-        }
-        else if (newTopRow != workingRowColumn) {
-            let oldRow = solvingArray[workingRowColumn];
-            solvingArray[workingRowColumn] = solvingArray[newTopRow];
-            solvingArray[newTopRow] = oldRow;
-        }
-
-        // Subtract the "top" row from all other rows
-        for (let row = workingRowColumn + 1; row < solvingArray.length; row++) {
-            if (solvingArray[row][workingRowColumn] != 0) {
-                for (let tc = 0; tc < solvingArray[row].length; tc++) {
-                    solvingArray[row][tc] = solvingArray[row][tc] - solvingArray[workingRowColumn][tc];
-                }
-            }
-        }
-        outputArray(solvingArray);
-    }
-
-    outputArray(solvingArray);
-
-    return solvingArray;
-}
-
-function outputArray(arr: number[][]) {
-
-    let str = '';
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr[i].length; j++) {
-            str += arr[i][j] + " ";
-        }
-        str += '\r\n';
-    }
-    console.log(str);
+    //console.log(part2);
+    return part2;
 }

@@ -1,7 +1,6 @@
 $file = $args[0]
-tsc "$file.ts" --outDir "out"
 $start = Get-Date
-node "out/$file.js"
+npx tsx "$file.ts"
 $end = Get-Date
 $duration = $end - $start
 $duration.TotalMilliseconds
