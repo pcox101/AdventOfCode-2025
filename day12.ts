@@ -22,25 +22,37 @@ for (let i = 0; i < lines.length; i++) {
     
     // I didn't even start.
 
-    // I looked at Reddit
+    // I looked at Reddit.
 
-    // Maybe the shapes tessellate in such a way that they will always fit into a large enough space without leaving gaps
-    // but the answer is just how many can physically fit into the space. All shapes use up 7 blocks, so if the grid has space
-    // for n blocks, then the maximum number of shapes is n/7.
+    // I've been trolled.
 
-    // Putting that value into the site gives the star, so I'm happy but not really happy, I suppose...
+    // I don't like these puzzles, but there are basically 3 cases:
+    // . Ones where the pieces can't fit because there physically isn't enough space for them
+    // .. All the shapes use 7 blocks, so if the whole area is smaller than n*7 (where n is the number of shapes we need to fit) then
+    // .. it will never fit
+    // . Ones where the pieces will always fit without any overlap
+    // .. The shapes are all 3x3 so if the whole area is greater than n*9 (where n is the number of shapes we need to fit) then
+    // .. it will always fit
+    // . The cases in the middle where some overlap is required
 
+    // We will work these two numbers out...
+    
     if (res) {
         //console.log("Found grid");
         let sizeOfGrid = parseInt(res[1]) * parseInt(res[2]);
         let numberOfShapes = parseInt(res[3]) + parseInt(res[4]) + parseInt(res[5]) + parseInt(res[6]) + parseInt(res[7]) + parseInt(res[8]);
 
         if ((numberOfShapes * 7) <= sizeOfGrid) {
+            // Will never fit, no need to even check
             part1 += 1;
+        }
+        else if ((numberOfShapes * 9) >= sizeOfGrid) {
+            // Will always fit, no need to move the shapes around
         }
         else
         {
-            //console.log("Too many");
+            console.log("PANIC!");
+            // TODO: Write very complicated flipping and rotating code here
         }
     }
 
